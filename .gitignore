@@ -8,3 +8,10 @@ __pycache__
 .pytest_cache
 .idea/
 local.env
+notebooks\preview.parquet
+252-CS465_Project_Instructions.docx
+venv
+.venv
+notebooks/preview.parquet
+*.parquet
+
