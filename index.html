@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>التعرف على القارئ الذكي</title>
+    <style>
+      :root {
+        --primary: #10b981;
+        --primary-hover: #059669;
+        --bg-color: #f3f4f6;
+        --card-bg: #ffffff;
+        --text-main: #1f2937;
+        --text-muted: #6b7280;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 2rem 0;
+      }
+      .container {
+        background-color: var(--card-bg);
+        padding: 2.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        width: 100%;
+        max-width: 500px;
+      }
+      h1 {
+        margin-top: 0;
+        color: var(--primary);
+        font-size: 1.8rem;
+      }
+      p.subtitle {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+      }
+
+      /* تصميم زر عرض القراء */
+      .reciters-toggle {
+        background: none;
+        border: 1px solid var(--primary);
+        color: var(--primary);
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s;
+      }
+      .reciters-toggle:hover {
+        background-color: #ecfdf5;
+      }
+      .reciters-list-container {
+        display: none;
+        max-height: 150px;
+        overflow-y: auto;
+        background-color: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        margin-bottom: 1.5rem;
+        text-align: right;
+        font-size: 0.85rem;
+      }
+      .reciters-list-container span {
+        display: inline-block;
+        background-color: #e5e7eb;
+        padding: 0.2rem 0.6rem;
+        margin: 0.2rem;
+        border-radius: 1rem;
+        color: var(--text-main);
+      }
+
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      button.action-btn {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      button.action-btn:hover {
+        background-color: var(--primary-hover);
+      }
+      button.action-btn:disabled {
+        background-color: #d1d5db;
+        cursor: not-allowed;
+      }
+      #stopBtn {
+        background-color: #ef4444;
+      }
+      #stopBtn:hover:not(:disabled) {
+        background-color: #dc2626;
+      }
+      .divider {
+        margin: 1.5rem 0;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        position: relative;
+      }
+      .divider::before,
+      .divider::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 40%;
+        height: 1px;
+        background-color: #e5e7eb;
+      }
+      .divider::before {
+        right: 0;
+      }
+      .divider::after {
+        left: 0;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+      .file-label {
+        background-color: #f3f4f6;
+        color: var(--text-main);
+        border: 2px dashed #d1d5db;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: border-color 0.3s;
+        display: block;
+      }
+      .file-label:hover {
+        border-color: var(--primary);
+      }
+      #status {
+        margin-top: 1rem;
+        font-weight: bold;
+        color: var(--text-muted);
+        min-height: 24px;
+      }
+
+      /* تصميم صندوق النتائج وقائمة الـ 10 قراء */
+      .result-box {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background-color: #ecfdf5;
+        border: 1px solid #10b981;
+        border-radius: 0.5rem;
+        display: none;
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      .result-box h3 {
+        margin: 0 0 0.5rem 0;
+        color: #065f46;
+        font-size: 1.4rem;
+      }
+      .top-10-title {
+        text-align: right;
+        font-size: 1rem;
+        color: #065f46;
+        margin-top: 1.5rem;
+        margin-bottom: 0.8rem;
+        border-bottom: 1px solid #10b981;
+        padding-bottom: 0.3rem;
+      }
+      .predictions-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        text-align: right;
+      }
+      .prediction-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: white;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem 0.8rem;
+        border-radius: 0.3rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .prediction-bar {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        background-color: #d1fae5;
+        z-index: 1;
+        transition: width 0.5s ease-in-out;
+      }
+      .prediction-text {
+        position: relative;
+        z-index: 2;
+        font-weight: 500;
+        color: #1f2937;
+      }
+      .prediction-score {
+        position: relative;
+        z-index: 2;
+        font-weight: bold;
+        color: #059669;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>التعرف على القارئ الذكي 🎙️</h1>
+      <p class="subtitle">
+        قم بتسجيل تلاوة لمدة 5 ثوانٍ على الأقل أو ارفع ملفاً صوتياً لنتعرف على
+        اسم القارئ.
+      </p>
+
+      <button id="toggleRecitersBtn" class="reciters-toggle">
+        📖 عرض القراء المدعومين في النظام
+      </button>
+      <div id="recitersListContainer" class="reciters-list-container">
+        <div id="recitersLoading">جاري تحميل القائمة...</div>
+        <div id="recitersData"></div>
+      </div>
+
+      <div class="controls">
+        <button id="recordBtn" class="action-btn">🔴 ابدأ التسجيل</button>
+        <button id="stopBtn" class="action-btn" disabled>
+          ⏹️ إيقاف وإرسال
+        </button>
+      </div>
+
+      <div class="divider">أو</div>
+
+      <label class="file-label">
+        📁 اختر ملفاً صوتياً من جهازك
+        <input type="file" id="fileUpload" accept="audio/*" />
+      </label>
+
+      <div id="status"></div>
+
+      <div class="result-box" id="resultBox">
+        <h3 id="reciterName">القارئ: -</h3>
+        <p id="confidenceRate">نسبة التطابق: -</p>
+
+        <div class="top-10-title">أقرب القراء للصوت:</div>
+        <ul id="predictionsList" class="predictions-list"></ul>
+      </div>
+    </div>
+
+    <script>
+      const BASE_URL =
+        "https://abdu-l7hman-quran-reciter-identification.hf.space";
+      const PREDICT_URL = `${BASE_URL}/predict/`;
+      const RECITERS_URL = `${BASE_URL}/reciters/`; // نقطة الاتصال الجديدة
+
+      let mediaRecorder;
+      let audioChunks = [];
+
+      const recordBtn = document.getElementById("recordBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const fileUpload = document.getElementById("fileUpload");
+      const statusText = document.getElementById("status");
+      const resultBox = document.getElementById("resultBox");
+      const reciterName = document.getElementById("reciterName");
+      const confidenceRate = document.getElementById("confidenceRate");
+      const predictionsList = document.getElementById("predictionsList");
+
+      const toggleRecitersBtn = document.getElementById("toggleRecitersBtn");
+      const recitersListContainer = document.getElementById(
+        "recitersListContainer",
+      );
+      const recitersData = document.getElementById("recitersData");
+      const recitersLoading = document.getElementById("recitersLoading");
+
+      let recitersLoaded = false;
+
+      // --- جلب وعرض قائمة القراء ---
+      toggleRecitersBtn.addEventListener("click", async () => {
+        if (recitersListContainer.style.display === "block") {
+          recitersListContainer.style.display = "none";
+          return;
+        }
+
+        recitersListContainer.style.display = "block";
+
+        if (!recitersLoaded) {
+          try {
+            const response = await fetch(RECITERS_URL);
+            const data = await response.json();
+
+            if (response.ok && data.reciters) {
+              recitersData.innerHTML = data.reciters
+                .map((name) => `<span>${name.replace(/_/g, " ")}</span>`)
+                .join("");
+              recitersLoading.style.display = "none";
+              recitersLoaded = true;
+              toggleRecitersBtn.textContent = `📖 إخفاء القراء (${data.total} قارئ)`;
+            }
+          } catch (error) {
+            recitersLoading.textContent =
+              "❌ فشل تحميل القائمة. تأكد من تحديث ملف api.py.";
+            console.error(error);
+          }
+        }
+      });
+
+      // --- نظام تسجيل الصوت من المتصفح ---
+      recordBtn.addEventListener("click", async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+            const audioFile = new File([audioBlob], "recording.ogg", {
+              type: "audio/ogg",
+            });
+            stream.getTracks().forEach((track) => track.stop());
+            await sendAudioToAPI(audioFile);
+          };
+
+          mediaRecorder.start();
+          statusText.textContent = "🎙️ جاري التسجيل... (تحدث الآن)";
+          statusText.style.color = "#ef4444";
+          recordBtn.disabled = true;
+          stopBtn.disabled = false;
+          resultBox.style.display = "none";
+        } catch (err) {
+          alert(
+            "❌ لم نتمكن من الوصول للمايكروفون. يرجى إعطاء الصلاحية للمتصفح.",
+          );
+          console.error(err);
+        }
+      });
+
+      stopBtn.addEventListener("click", () => {
+        mediaRecorder.stop();
+        statusText.textContent = "⏳ جاري المعالجة وإرسال البيانات...";
+        statusText.style.color = "#6b7280";
+        recordBtn.disabled = false;
+        stopBtn.disabled = true;
+      });
+
+      // --- نظام رفع الملفات الجاهزة ---
+      fileUpload.addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          statusText.textContent = "⏳ جاري رفع وتحليل الملف...";
+          resultBox.style.display = "none";
+          await sendAudioToAPI(file);
+        }
+      });
+
+      // --- إرسال الصوت وعرض أفضل 10 قراء ---
+      async function sendAudioToAPI(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const response = await fetch(PREDICT_URL, {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            statusText.textContent = "✅ تمت العملية بنجاح!";
+            statusText.style.color = "#10b981";
+
+            // عرض القارئ الأول
+            reciterName.textContent = `القارئ: ${result.top_prediction}`;
+            confidenceRate.textContent = `نسبة التطابق: ${(result.confidence * 100).toFixed(1)}%`;
+
+            // تفريغ وتعبئة قائمة الـ 10 قراء
+            predictionsList.innerHTML = "";
+            const matches = result.all_matches || [];
+
+            matches.forEach((match, index) => {
+              const percentage = (match.probability * 100).toFixed(1);
+              const li = document.createElement("li");
+              li.className = "prediction-item";
+              li.innerHTML = `
+                <div class="prediction-bar" style="width: ${percentage}%"></div>
+                <span class="prediction-text">${index + 1}. ${match.reciter}</span>
+                <span class="prediction-score">${percentage}%</span>
+              `;
+              predictionsList.appendChild(li);
+            });
+
+            resultBox.style.display = "block";
+          } else {
+            statusText.textContent = `❌ خطأ: ${result.error || result.detail}`;
+            statusText.style.color = "#ef4444";
+          }
+        } catch (error) {
+          console.error(error);
+          statusText.textContent =
+            "❌ تعذر الاتصال بالخادم. تأكد من أن السيرفر يعمل.";
+          statusText.style.color = "#ef4444";
+        }
+      }
+    </script>
+  </body>
+</html>
