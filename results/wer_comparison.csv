@@ -1,0 +1,4 @@
+Model,WER,WER (%),CER,CER (%),Samples
+Whisper-Medium (Vanilla),0.411,41.1,0.1147,11.47,129
+Whisper-Medium (Fine-tuned),0.0626,6.26,0.0441,4.41,129
+Tadabur-Whisper-Small (Author),0.4706,47.06,0.1228,12.28,129

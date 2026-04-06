@@ -1,63 +1,186 @@
-# Tadabur ASR — Team Roadmap
+# 🕌 Tadabur — Quran ASR System
 
-This repo is our shared workspace for the Tadabur ASR machine learning project: data → baselines → improved models → evaluation → paper + presentation. This `README.md` is written for us (what we do next, who owns what, and what “done” means).
+> Fine-tuned Whisper Medium for Quran speech recognition, Surah/Ayah identification, and reciter recognition.
 
-## Working agreements (how we operate)
+[![Model on HuggingFace](https://img.shields.io/badge/🤗%20HuggingFace-rakansuliman%2Ftadabur--whisper--medium-blue)](https://huggingface.co/rakansuliman/tadabur-whisper-medium)
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+[![CS465 ML Project](https://img.shields.io/badge/CS465-Machine%20Learning-green)]()
 
-- **Meetings**: 1 planning meeting/week + 1 short async check-in midweek.
-- **PRs**: small PRs, descriptive titles, one reviewer minimum when possible.
-- **Reproducibility rule**: if it can’t be rerun, it doesn’t count as a result.
-- **Single source of truth**: metrics/results that go into the paper must be produced by code in this repo.
+## Overview
 
+Tadabur is an end-to-end Quran speech recognition pipeline that:
 
+- 🎙️ **Transcribes** Quran recitations to Arabic text (6.26% WER)
+- 📖 **Identifies** the Surah and Ayah being recited (up to 91.2% confidence)
+- 👤 **Recognizes** the reciter from 335 supported reciters (98.47% accuracy)
 
-## Roadmap (sprints)
+Built on the [Tadabur dataset](https://huggingface.co/datasets/FaisaI/tadabur) — 1,400+ hours, 600+ reciters.
 
-### Sprint 0 — Repo + data setup
+---
 
-- **Goal**: everyone can run the same baseline end-to-end.
-- **Done when**:
-  - dataset access instructions are clear (download link, folder path, expected files)
-  - a single command/script runs preprocessing + a tiny sanity training run
-  - we have a shared metrics file or table format (even if numbers are bad)
+## Results
 
-### Sprint 1 — Problem statement + baselines
+| Model | WER (%) | CER (%) |
+|---|---|---|
+| Whisper Medium (Vanilla) | 41.10% | 11.47% |
+| Tadabur-Whisper-Small (Author) | 47.06% | 12.28% |
+| **Ours: Whisper Medium Fine-tuned** | **6.26%** | **4.41%** |
 
-- **Goal**: lock the task definition and get baseline numbers.
-- **Done when**:
-  - target label/metric is finalized (what we optimize + what we report)
-  - at least **2 baselines** run reliably (simple + standard)
-  - results are logged in a consistent way (seed, split, metric, config)
+| Metric | Value |
+|---|---|
+| Reciter classifier accuracy | 98.47% |
+| Supported reciters | 335 |
+| Surah/Ayah identification confidence | up to 91.2% |
 
-### Sprint 2 — EDA + preprocessing + split policy 
+---
 
-- **Goal**: justify data choices and remove obvious pipeline risks.
-- **Done when**:
-  - preprocessing is documented and implemented (handling missing/invalid entries)
-  - EDA produces 3–6 figures/tables we can use in the paper
-  - train/val/test (or CV) protocol is chosen and implemented once (no ad‑hoc splits)
+## Architecture
 
-### Sprint 3 — Feature engineering + model improvements
+```
+Audio Input
+    ↓
+Whisper Encoder (frozen after ASR training)
+    ├── Whisper Decoder    → Arabic transcription
+    └── MLP Classifier     → Reciter name (335 classes)
+    ↓
+Fuzzy Matching (RapidFuzz)
+    ↓
+Surah + Ayah identification (6,236 ayahs)
+```
 
-- **Goal**: improve over baselines with at least one clear idea.
-- **Done when**:
-  - 2–4 model variants are implemented behind a common interface/config
-  - one ablation table exists (what helped, what didn’t)
-  - hyperparameter tuning approach is documented (even if minimal)
+---
 
-### Sprint 4 — Final experiments + error analysis
+## Repository Structure
 
-- **Goal**: produce publication-quality results and insights.
-- **Done when**:
-  - final models run with fixed seeds and saved configs
-  - results tables/figures are generated from scripts (not manual edits)
-  - error analysis is written (common failure cases, bias/imbalance notes, limitations)
+```
+tadabur-asr/
+├── src/
+│   ├── train.py              # Whisper fine-tuning
+│   ├── train_reciter.py      # Reciter classifier training
+│   ├── model_eval.py         # WER/CER evaluation
+│   └── inference.py          # Gradio inference app
+├── tadabur_eda.ipynb          # Exploratory data analysis
+├── supported_reciters.txt     # All 335 supported reciters
+└── requirements.txt
+```
 
-### Sprint 5 — Paper + presentation packaging 
+---
 
-- **Goal**: a clean repo and a coherent story.
-- **Done when**:
-  - IEEE paper draft is complete, consistent with repo outputs, and cited properly
-  - final repo has “how to run” steps and points to the exact commands used
-  - 5-minute slides are ready + one rehearsal completed
+## Setup
 
+```bash
+git clone https://github.com/rakansuliman/tadabur-asr
+cd tadabur-asr
+pip install -r requirements.txt
+apt-get install -y ffmpeg
+```
+
+---
+
+## Usage
+
+### Run inference app locally
+
+```bash
+python src/inference.py
+```
+
+### Quick transcription
+
+```python
+from transformers import WhisperProcessor, WhisperForConditionalGeneration
+import librosa, torch
+
+processor = WhisperProcessor.from_pretrained("rakansuliman/tadabur-whisper-medium")
+model = WhisperForConditionalGeneration.from_pretrained("rakansuliman/tadabur-whisper-medium")
+
+audio, _ = librosa.load("recitation.wav", sr=16000)
+inputs = processor(audio, sampling_rate=16000, return_tensors="pt").input_features
+with torch.no_grad():
+    ids = model.generate(inputs, language="arabic", task="transcribe",
+                         max_new_tokens=225, suppress_tokens=[], forced_decoder_ids=None)
+print(processor.batch_decode(ids, skip_special_tokens=True)[0])
+```
+
+---
+
+## Training
+
+### 1. ASR Fine-tuning (Whisper)
+
+```bash
+# On RunPod RTX 4090, ~17 hours
+python src/train.py
+```
+
+### 2. Reciter Classifier
+
+```bash
+# Two-phase: extract embeddings → train MLP
+python src/train_reciter.py
+```
+
+### 3. Evaluation
+
+```bash
+python src/model_eval.py
+```
+
+---
+
+## Requirements
+
+```
+torch
+transformers
+librosa
+gradio
+rapidfuzz
+pyarrow
+numpy
+scipy
+pandas
+tqdm
+evaluate
+jiwer
+soundfile
+tensorboard
+```
+
+---
+
+## Model Weights
+
+Available at [huggingface.co/rakansuliman/tadabur-whisper-medium](https://huggingface.co/rakansuliman/tadabur-whisper-medium):
+
+- `model.safetensors` — Fine-tuned Whisper Medium (3.06GB)
+- `reciter_classifier.pt` — MLP reciter classifier (2.76MB)
+- `reciter_idx_to_id.json` — Classifier index → reciter ID mapping
+- `reciter_id_to_idx.json` — Reciter ID → classifier index mapping
+- `sheikh_dict.json` — Reciter ID → Arabic name
+- `surah_dict.json` — Surah index → Arabic name
+- `supported_reciters.txt` — Full list of 335 supported reciters
+
+---
+
+## Citation
+
+```bibtex
+@misc{suliman2026tadabur,
+  author = {Suliman, Rakan},
+  title  = {Tadabur: Quran ASR with Surah/Ayah Identification and Reciter Recognition},
+  year   = {2026},
+  url    = {https://github.com/rakansuliman/tadabur-asr}
+}
+```
+
+---
+
+## License
+
+CC BY-NC 4.0 — Research and educational use only.
+Please engage with Quran content respectfully.
+
+---
+
+*CS465 Machine Learning Project — Spring 2026*

@@ -1,0 +1,7 @@
+Model,reciter_id,WER
+Whisper-Medium (Vanilla),17,0.303
+Whisper-Medium (Vanilla),66,0.4348
+Whisper-Medium (Fine-tuned),17,0.0455
+Whisper-Medium (Fine-tuned),66,0.0
+Tadabur-Whisper-Small (Author),17,0.4242
+Tadabur-Whisper-Small (Author),66,0.4493

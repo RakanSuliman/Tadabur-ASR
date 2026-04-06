@@ -15,3 +15,6 @@ venv/
 notebooks/preview.parquet
 *.parquet
 
+# EDA CSV exceeds GitHub 100MB limit; keep local only
+output/tadabur_eda_stats.csv
+
