@@ -167,10 +167,10 @@ Available at [huggingface.co/rakansuliman/tadabur-whisper-medium](https://huggin
 
 ```bibtex
 @misc{suliman2026tadabur,
-  author = {Suliman, Rakan},
+  author = {Suliman, Rakan and Mamdoh, Abdulrahman and Aldosari, Hussam},
   title  = {Tadabur: Quran ASR with Surah/Ayah Identification and Reciter Recognition},
   year   = {2026},
-  url    = {https://github.com/rakansuliman/tadabur-asr}
+  url    = {https://huggingface.co/rakansuliman/tadabur-whisper-medium}
 }
 ```
 
