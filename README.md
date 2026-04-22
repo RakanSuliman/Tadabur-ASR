@@ -167,7 +167,7 @@ Available at [huggingface.co/rakansuliman/tadabur-whisper-medium](https://huggin
 
 ```bibtex
 @misc{suliman2026tadabur,
-  author = {Suliman, Rakan and Mamdoh, Abdulrahman and Aldosari, Hussam},
+  author = {Suliman, Rakan and Mamdoh, Abdulrahman and Aldosari, Hussam and Khalid, Mohammed},
   title  = {Tadabur: Quran ASR with Surah/Ayah Identification and Reciter Recognition},
   year   = {2026},
   url    = {https://huggingface.co/rakansuliman/tadabur-whisper-medium}
